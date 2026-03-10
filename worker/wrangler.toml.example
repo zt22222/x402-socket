@@ -1,0 +1,37 @@
+name = "x402-socket"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "./public"
+
+[[kv_namespaces]]
+binding = "USED_TX_HASHES"
+id = "REPLACE_WITH_KV_ID"
+preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
+
+[[kv_namespaces]]
+binding = "AUTH_TOKEN_CACHE"
+id = "REPLACE_WITH_KV_ID"
+preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
+
+[[kv_namespaces]]
+binding = "SHUTDOWN_TOKENS"
+id = "REPLACE_WITH_KV_ID"
+preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
+
+[vars]
+CHAIN_ID = "137"
+USDC_CONTRACT = "0xYOUR_USDC_CONTRACT"
+PAYMENT_AMOUNT = "0.01"
+SOCKET_API_BASE_URL = "https://api.litexmonitor.com"
+POWER_ON_DURATION = "15"
+RPC_URL = "https://polygon-mainnet.infura.io/v3/YOUR_KEY"
+RECEIVER_ADDRESS = "0xYOUR_RECEIVER_ADDRESS"
+SOCKET_API_USER = "your_user"
+SOCKET_API_PASSWORD = "your_password"
+DEFAULT_DEVICE_PN = "your_device_pn"
+DEFAULT_DEVICE_SN = "your_device_sn"
+DEFAULT_DEVICE_DEVADDR = "your_devaddr"
+DEFAULT_DEVICE_DEVCODE = "your_devcode"
