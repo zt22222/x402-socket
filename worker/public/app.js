@@ -163,7 +163,7 @@
           }
         }
       } catch (err) {
-        // Silently retry on next interval
+        console.warn('poll-payment error, will retry:', err);
       }
     }, 10000);
   }

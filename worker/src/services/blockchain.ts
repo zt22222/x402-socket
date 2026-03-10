@@ -1,15 +1,24 @@
-import { createPublicClient, http, parseUnits, keccak256, toBytes } from 'viem';
-import { polygon } from 'viem/chains';
 import type { Env } from '../config';
 import { logger } from '../utils/logger';
 
-const ERC20_TRANSFER_TOPIC = keccak256(toBytes('Transfer(address,address,uint256)'));
+// Hardcoded keccak256('Transfer(address,address,uint256)')
+const ERC20_TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 
-function getClient(env: Env) {
-  return createPublicClient({
-    chain: polygon,
-    transport: http(env.RPC_URL),
+async function rpc(url: string, method: string, params: unknown[]): Promise<unknown> {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
   });
+  const json = (await res.json()) as { result?: unknown; error?: { message: string } };
+  if (json.error) throw new Error(json.error.message);
+  return json.result;
+}
+
+function parseUnits(amount: string, decimals: number): bigint {
+  const [whole, frac = ''] = amount.split('.');
+  const padded = frac.padEnd(decimals, '0').slice(0, decimals);
+  return BigInt(whole + padded);
 }
 
 export interface VerifyResult {
@@ -27,16 +36,18 @@ export async function verifyPayment(txHash: string, env: Env): Promise<VerifyRes
   }
 
   try {
-    const client = getClient(env);
-
     // 2. 获取交易回执
-    const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
+    const receipt = (await rpc(env.RPC_URL, 'eth_getTransactionReceipt', [txHash])) as {
+      status: string;
+      logs: Array<{ address: string; topics: string[]; data: string; transactionHash: string }>;
+    } | null;
+
     if (!receipt) {
       return { success: false, error: 'Transaction not found or not yet confirmed' };
     }
 
-    // 3. 检查交易状态 (viem: 'success' | 'reverted')
-    if (receipt.status !== 'success') {
+    // 3. 检查交易状态 (0x1 = success)
+    if (receipt.status !== '0x1') {
       return { success: false, error: 'Transaction failed on-chain' };
     }
 
@@ -53,7 +64,7 @@ export async function verifyPayment(txHash: string, env: Env): Promise<VerifyRes
       if (log.topics.length < 3) continue;
 
       // topics[2] = to address (padded to 32 bytes)
-      const toAddress = '0x' + log.topics[2]!.slice(26).toLowerCase();
+      const toAddress = '0x' + log.topics[2].slice(26).toLowerCase();
       if (toAddress !== receiverAddress) continue;
 
       // data = transfer amount
@@ -70,7 +81,6 @@ export async function verifyPayment(txHash: string, env: Env): Promise<VerifyRes
 
     // 5. 验证通过
     logger.info('Payment verified', { txHash, receiver: receiverAddress });
-
     return { success: true };
   } catch (err: any) {
     logger.error('Blockchain verification error', { txHash, error: err.message });
@@ -89,30 +99,30 @@ export interface PollResult {
 }
 
 export async function getLatestBlock(env: Env): Promise<number> {
-  const client = getClient(env);
-  const blockNumber = await client.getBlockNumber();
-  return Number(blockNumber);
+  const hex = (await rpc(env.RPC_URL, 'eth_blockNumber', [])) as string;
+  return parseInt(hex, 16);
 }
 
 export async function pollPayment(sinceBlock: number, env: Env): Promise<PollResult> {
   const requiredAmount = parseUnits(env.PAYMENT_AMOUNT, 6);
   const receiverAddress = env.RECEIVER_ADDRESS.toLowerCase();
-  const receiverPadded = ('0x' + receiverAddress.slice(2).padStart(64, '0')) as `0x${string}`;
+  const receiverPadded = '0x' + receiverAddress.slice(2).padStart(64, '0');
 
   try {
-    const client = getClient(env);
-    const latestBlock = await client.getBlockNumber();
+    const latestBlock = await getLatestBlock(env);
 
-    if (BigInt(sinceBlock) > latestBlock) {
+    if (sinceBlock > latestBlock) {
       return { found: false };
     }
 
-    const logs = await client.getLogs({
-      address: env.USDC_CONTRACT as `0x${string}`,
-      topics: [ERC20_TRANSFER_TOPIC, null, receiverPadded],
-      fromBlock: BigInt(sinceBlock),
-      toBlock: latestBlock,
-    });
+    const logs = (await rpc(env.RPC_URL, 'eth_getLogs', [
+      {
+        address: env.USDC_CONTRACT,
+        topics: [ERC20_TRANSFER_TOPIC, null, receiverPadded],
+        fromBlock: '0x' + sinceBlock.toString(16),
+        toBlock: '0x' + latestBlock.toString(16),
+      },
+    ])) as Array<{ transactionHash: string; data: string }>;
 
     for (const log of logs) {
       const txHash = log.transactionHash.toLowerCase();
@@ -123,16 +133,6 @@ export async function pollPayment(sinceBlock: number, env: Env): Promise<PollRes
 
       const amount = BigInt(log.data);
       if (amount < requiredAmount) continue;
-
-      // 预验证：确保这笔交易能通过完整校验
-      const preCheck = await verifyPayment(log.transactionHash, env);
-      if (!preCheck.success) {
-        logger.warn('pollPayment: skipping tx that failed pre-verify', {
-          txHash: log.transactionHash,
-          error: preCheck.error,
-        });
-        continue;
-      }
 
       return { found: true, txHash: log.transactionHash };
     }
