@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.log
+
+# Cloudflare Workers
+.wrangler/
+.dev.vars

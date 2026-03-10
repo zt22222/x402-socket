@@ -1,0 +1,365 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  min-height: 100vh;
+  color: #fff;
+}
+
+.container {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 4px;
+}
+
+.card {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 28px 24px;
+  width: 100%;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.device-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.card h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.device-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #666;
+}
+
+.status-dot.online {
+  background: #4ade80;
+  box-shadow: 0 0 8px rgba(74,222,128,0.5);
+}
+
+.status-dot.offline {
+  background: #f87171;
+}
+
+.price-info {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.price {
+  font-size: 32px;
+  font-weight: 700;
+  color: #a78bfa;
+}
+
+.duration {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+}
+
+.chain-info {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.06);
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.pay-btn {
+  width: 100%;
+  padding: 16px;
+  margin-top: 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pay-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+}
+
+.pay-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pay-btn.loading {
+  position: relative;
+  color: transparent;
+}
+
+.pay-btn.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.status-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+  width: 100%;
+}
+
+.step {
+  text-align: center;
+  opacity: 0.3;
+  transition: opacity 0.3s;
+  flex: 1;
+}
+
+.step.active {
+  opacity: 1;
+}
+
+.step.done {
+  opacity: 0.6;
+}
+
+.step-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.step-text {
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+}
+
+.countdown-container {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.countdown-ring {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 12px;
+}
+
+.countdown-ring svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+.countdown-ring circle {
+  fill: none;
+  stroke-width: 6;
+}
+
+.countdown-ring .bg {
+  stroke: rgba(255,255,255,0.1);
+}
+
+.countdown-ring .progress {
+  stroke: #a78bfa;
+  stroke-dasharray: 339.292;
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.countdown-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 36px;
+  font-weight: 700;
+}
+
+.countdown-label {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+}
+
+.result {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.result-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.result-text {
+  font-size: 16px;
+  color: rgba(255,255,255,0.8);
+}
+
+.fallback {
+  margin-top: 24px;
+  width: 100%;
+  text-align: center;
+}
+
+.fallback summary {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.fallback-inner {
+  margin-top: 10px;
+}
+
+.fallback input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-family: monospace;
+}
+
+.fallback input::placeholder {
+  color: rgba(255,255,255,0.3);
+}
+
+.secondary-btn {
+  padding: 10px 24px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.secondary-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.qr-section {
+  margin-top: 24px;
+  width: 100%;
+  text-align: center;
+}
+
+.qr-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: rgba(255,255,255,0.9);
+}
+
+.qr-container {
+  display: inline-block;
+  padding: 16px;
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.qr-container canvas {
+  display: block;
+}
+
+.qr-hint {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 6px;
+}
+
+.qr-amount {
+  font-size: 14px;
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+.qr-test-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.error-msg {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: rgba(248,113,113,0.15);
+  border: 1px solid rgba(248,113,113,0.3);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 14px;
+  width: 100%;
+  text-align: center;
+}

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>x402 Payment</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      color: #fff;
+    }
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 32px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .logo { font-size: 24px; font-weight: 700; letter-spacing: 2px; }
+    .subtitle { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+    .payment-card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      margin-bottom: 24px;
+    }
+    .payment-amount {
+      font-size: 36px;
+      font-weight: 700;
+      color: #a78bfa;
+      margin-bottom: 4px;
+    }
+    .payment-chain {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      background: rgba(255,255,255,0.06);
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 8px;
+    }
+    .payment-to {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      margin-top: 12px;
+      word-break: break-all;
+      font-family: monospace;
+    }
+    .section-title {
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 12px;
+      width: 100%;
+      text-align: left;
+    }
+    .wallet-list {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .wallet-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .wallet-btn:hover, .wallet-btn:active {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.25);
+    }
+    .wallet-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .wallet-name { flex: 1; text-align: left; }
+    .wallet-arrow { color: rgba(255,255,255,0.3); font-size: 18px; }
+    .pay-now-btn {
+      width: 100%;
+      padding: 16px;
+      margin-bottom: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .pay-now-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(124,58,237,0.4);
+    }
+    .pay-now-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .pay-status {
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .pay-status.success { color: #4ade80; }
+    .pay-status.error { color: #f87171; }
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: rgba(255,255,255,0.08);
+      margin: 8px 0 20px;
+    }
+    .copy-section {
+      width: 100%;
+      text-align: center;
+    }
+    .copy-section p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      margin-bottom: 10px;
+    }
+    .copy-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .copy-input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      font-size: 12px;
+      font-family: monospace;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .copy-btn {
+      padding: 10px 16px;
+      border: 1px solid rgba(167,139,250,0.4);
+      border-radius: 8px;
+      background: rgba(167,139,250,0.15);
+      color: #a78bfa;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { background: rgba(167,139,250,0.25); }
+    .copy-btn.copied { color: #4ade80; border-color: rgba(74,222,128,0.4); }
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(74,222,128,0.9);
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">⚡ x402</div>
+      <div class="subtitle">Smart Socket Payment</div>
+    </div>
+
+    <div class="payment-card">
+      <div class="payment-amount" id="pay-amount">0.01 USDC</div>
+      <div class="payment-chain" id="pay-chain">Polygon Mainnet</div>
+      <div class="payment-to">To: <span id="pay-receiver"></span></div>
+    </div>
+
+    <div class="section-title" id="section-title">Choose a wallet</div>
+
+    <!-- Pay status -->
+    <div class="pay-status" id="pay-status" style="display:none;"></div>
+
+    <!-- Wallet list (always shown) -->
+    <div class="wallet-list" id="wallet-list"></div>
+
+    <div class="divider"></div>
+
+    <div class="copy-section">
+      <p>Or copy the receiver address and transfer manually</p>
+      <div class="copy-row">
+        <input class="copy-input" id="copy-address" readonly>
+        <button class="copy-btn" id="copy-btn">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Address copied!</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    const params = new URLSearchParams(window.location.search);
+    const receiver = params.get('receiver') || '';
+    const amount = params.get('amount') || '0.01';
+    const token = params.get('token') || 'USDC';
+    const contract = params.get('contract') || '';
+    const chainId = params.get('chainId') || '137';
+    const chainName = params.get('chainName') || 'Polygon';
+    const decimals = params.get('decimals') || '6';
+    const amountWei = params.get('amountWei') || '10000';
+
+    const USDC_ABI = ['function transfer(address to, uint256 amount) returns (bool)'];
+    const eip681 = `ethereum:${contract}/transfer?address=${receiver}&uint256=${amountWei}&chainId=${chainId}`;
+
+    // Display payment info
+    document.getElementById('pay-amount').textContent = `${amount} ${token}`;
+    document.getElementById('pay-chain').textContent = `${chainName} Mainnet`;
+    document.getElementById('pay-receiver').textContent = receiver;
+    document.getElementById('copy-address').value = receiver;
+
+    const sectionTitle = document.getElementById('section-title');
+    const payStatus = document.getElementById('pay-status');
+    const walletListEl = document.getElementById('wallet-list');
+
+    const hasWallet = typeof window.ethereum !== 'undefined';
+
+    // Wallet definitions
+    const wallets = [
+      {
+        name: 'MetaMask',
+        icon: '🦊',
+        deepLink: () => `https://metamask.app.link/send/${eip681}`,
+      },
+      {
+        name: 'Trust Wallet',
+        icon: '🛡️',
+        deepLink: () => `https://link.trustwallet.com/send?coin=966&address=${receiver}&amount=${amount}&token_id=${contract}`,
+      },
+      {
+        name: 'Coinbase Wallet',
+        icon: '🔵',
+        deepLink: () => `https://go.cb-w.com/send?address=${receiver}&amount=${amount}&asset=${token}&chainId=${chainId}`,
+      },
+      {
+        name: 'imToken',
+        icon: '💎',
+        deepLink: () => `imtokenv2://navigate?screen=DappView&url=${encodeURIComponent(window.location.href)}`,
+      },
+      {
+        name: 'TokenPocket',
+        icon: '🟣',
+        deepLink: () => `tpdapp://open?params=${encodeURIComponent(JSON.stringify({ url: window.location.href, chain: 'Polygon', chainId: chainId }))}`,
+      },
+      {
+        name: 'Other Wallet (EIP-681)',
+        icon: '📱',
+        deepLink: () => eip681,
+      },
+    ];
+
+    // Render wallet list
+    wallets.forEach(w => {
+      const btn = document.createElement('button');
+      btn.className = 'wallet-btn';
+      btn.innerHTML = `
+        <div class="wallet-icon">${w.icon}</div>
+        <div class="wallet-name">${w.name}</div>
+        <div class="wallet-arrow">›</div>
+      `;
+      btn.addEventListener('click', () => onWalletClick(w));
+      walletListEl.appendChild(btn);
+    });
+
+    async function onWalletClick(wallet) {
+      // If browser has injected wallet, try direct ERC-20 transfer
+      if (hasWallet) {
+        await payDirect(wallet.name);
+      } else {
+        // No injected wallet — use deep link
+        window.location.href = wallet.deepLink();
+      }
+    }
+
+    async function payDirect(walletName) {
+      walletListEl.style.display = 'none';
+      payStatus.style.display = 'block';
+      payStatus.className = 'pay-status';
+      payStatus.textContent = `Connecting to ${walletName}...`;
+
+      try {
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+        // Switch chain if needed
+        const chainIdHex = '0x' + parseInt(chainId).toString(16);
+        const currentChain = await window.ethereum.request({ method: 'eth_chainId' });
+        if (currentChain !== chainIdHex) {
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: chainIdHex }],
+            });
+          } catch (switchErr) {
+            if (switchErr.code === 4902) {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId: chainIdHex,
+                  chainName: chainName,
+                  rpcUrls: ['https://polygon-rpc.com'],
+                  nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+                  blockExplorerUrls: ['https://polygonscan.com'],
+                }],
+              });
+            } else {
+              throw switchErr;
+            }
+          }
+        }
+
+        payStatus.textContent = 'Confirm transaction in your wallet...';
+
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const usdcContract = new ethers.Contract(contract, USDC_ABI, signer);
+        const tx = await usdcContract.transfer(receiver, ethers.parseUnits(amount, parseInt(decimals)));
+
+        payStatus.textContent = 'Waiting for confirmation...';
+        const receipt = await tx.wait(1);
+
+        if (receipt.status === 1) {
+          payStatus.className = 'pay-status success';
+          payStatus.textContent = 'Payment successful! TxHash: ' + tx.hash;
+        } else {
+          throw new Error('Transaction failed on-chain');
+        }
+      } catch (err) {
+        payStatus.className = 'pay-status error';
+        if (err.code === 4001) {
+          payStatus.textContent = 'Transaction cancelled';
+        } else {
+          payStatus.textContent = 'Error: ' + (err.reason || err.message || 'Unknown error');
+        }
+        // Show wallet list again for retry
+        setTimeout(() => {
+          walletListEl.style.display = 'flex';
+          payStatus.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Copy button
+    const copyBtn = document.getElementById('copy-btn');
+    const toast = document.getElementById('toast');
+
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(receiver).then(() => {
+        copyBtn.textContent = 'Copied!';
+        copyBtn.classList.add('copied');
+        toast.style.display = 'block';
+        setTimeout(() => {
+          toast.style.display = 'none';
+          copyBtn.textContent = 'Copy';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+  })();
+  </script>
+</body>
+</html>

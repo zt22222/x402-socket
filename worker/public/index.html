@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>x402 Smart Socket</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">⚡ x402</div>
+      <div class="subtitle">Smart Socket · Pay-per-Use</div>
+    </div>
+
+    <!-- Device Info Card -->
+    <div class="card" id="device-card">
+      <div class="device-icon">🔌</div>
+      <h2 id="device-name">Smart Socket</h2>
+      <div class="device-status" id="device-status">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">Checking...</span>
+      </div>
+      <div class="price-info">
+        <div class="price">0.01 USDC</div>
+        <div class="duration">/ 15 sec</div>
+      </div>
+      <div class="chain-info">Polygon Mainnet</div>
+    </div>
+
+    <!-- Action Button -->
+    <button class="pay-btn" id="pay-btn" disabled>
+      <span id="btn-text">Pay & Power On</span>
+    </button>
+
+    <!-- QR Code Section -->
+    <div class="qr-section" id="qr-section" style="display:none;">
+      <div class="qr-title">Scan to Pay</div>
+      <div class="qr-container" id="qr-container"></div>
+      <div class="qr-hint">Scan with an EIP-681 compatible wallet to complete payment</div>
+      <div class="qr-amount">Amount: <span id="qr-amount-text">0.01 USDC</span></div>
+      <a class="qr-test-link" id="qr-test-link" href="#" target="_blank">[ Test: Open QR link ]</a>
+    </div>
+
+    <!-- Status Flow -->
+    <div class="status-flow" id="status-flow" style="display:none;">
+      <div class="step" id="step-pay">
+        <div class="step-icon">💳</div>
+        <div class="step-text">Awaiting Payment</div>
+      </div>
+      <div class="step" id="step-verify">
+        <div class="step-icon">🔍</div>
+        <div class="step-text">On-chain Verification</div>
+      </div>
+      <div class="step" id="step-active">
+        <div class="step-icon">⚡</div>
+        <div class="step-text">Activated</div>
+      </div>
+    </div>
+
+    <!-- Countdown -->
+    <div class="countdown-container" id="countdown-container" style="display:none;">
+      <div class="countdown-ring">
+        <svg viewBox="0 0 120 120">
+          <circle class="bg" cx="60" cy="60" r="54"/>
+          <circle class="progress" id="countdown-progress" cx="60" cy="60" r="54"/>
+        </svg>
+        <div class="countdown-text" id="countdown-text">15</div>
+      </div>
+      <div class="countdown-label">Time Remaining (sec)</div>
+    </div>
+
+    <!-- Result -->
+    <div class="result" id="result" style="display:none;">
+      <div class="result-icon" id="result-icon">✅</div>
+      <div class="result-text" id="result-text">Completed</div>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-msg" id="error-msg" style="display:none;"></div>
+
+    <!-- Manual txHash Input (fallback) -->
+    <div class="fallback" id="fallback" style="display:none;">
+      <details>
+        <summary>Payment completed but not detected?</summary>
+        <div class="fallback-inner">
+          <input type="text" id="manual-tx" placeholder="Enter transaction hash 0x...">
+          <button class="secondary-btn" id="manual-verify-btn">Verify Manually</button>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "x402-socket-worker",
+  "version": "2.0.0",
+  "description": "x402 智能插座按需付费系统 - Cloudflare Workers 版",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "dependencies": {
+    "hono": "^4.0.0",
+    "viem": "^2.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.0.0",
+    "wrangler": "^3.0.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,43 @@
+name = "x402-socket"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Static assets
+[assets]
+directory = "./public"
+
+# KV Namespaces (create via: wrangler kv namespace create <NAME>)
+# Then paste the generated IDs below
+[[kv_namespaces]]
+binding = "USED_TX_HASHES"
+id = "4d493c638786485fa908c2c206746f7b"
+preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
+
+[[kv_namespaces]]
+binding = "AUTH_TOKEN_CACHE"
+id = "f8278321a9604c8ba5fabfe84eaf8234"
+preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
+
+[[kv_namespaces]]
+binding = "SHUTDOWN_TOKENS"
+id = "b42f9c3cc45844e3a331b3f74fe6bd17"
+preview_id = "f501915250fa4475bceabf09118d3920"
+
+# Non-sensitive configuration
+[vars]
+CHAIN_ID = "137"
+USDC_CONTRACT = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+PAYMENT_AMOUNT = "0.01"
+SOCKET_API_BASE_URL = "https://api.litexmonitor.com"
+POWER_ON_DURATION = "15"
+
+# Secrets (set via `wrangler secret put <NAME>`):
+# RPC_URL
+# RECEIVER_ADDRESS
+# SOCKET_API_USER
+# SOCKET_API_PASSWORD
+# DEFAULT_DEVICE_PN
+# DEFAULT_DEVICE_SN
+# DEFAULT_DEVICE_DEVADDR
+# DEFAULT_DEVICE_DEVCODE
