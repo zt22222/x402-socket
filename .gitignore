@@ -6,3 +6,4 @@ dist/
 # Cloudflare Workers
 .wrangler/
 .dev.vars
+wrangler.toml
