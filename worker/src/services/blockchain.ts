@@ -68,8 +68,7 @@ export async function verifyPayment(txHash: string, env: Env): Promise<VerifyRes
       return { success: false, error: 'No valid USDC transfer found to receiver address with sufficient amount' };
     }
 
-    // 5. 标记 txHash 为已使用 (30天 TTL)
-    await env.USED_TX_HASHES.put(normalizedHash, Date.now().toString(), { expirationTtl: 2592000 });
+    // 5. 验证通过
     logger.info('Payment verified', { txHash, receiver: receiverAddress });
 
     return { success: true };
@@ -104,6 +103,10 @@ export async function pollPayment(sinceBlock: number, env: Env): Promise<PollRes
     const client = getClient(env);
     const latestBlock = await client.getBlockNumber();
 
+    if (BigInt(sinceBlock) > latestBlock) {
+      return { found: false };
+    }
+
     const logs = await client.getLogs({
       address: env.USDC_CONTRACT as `0x${string}`,
       topics: [ERC20_TRANSFER_TOPIC, null, receiverPadded],
@@ -120,6 +123,16 @@ export async function pollPayment(sinceBlock: number, env: Env): Promise<PollRes
 
       const amount = BigInt(log.data);
       if (amount < requiredAmount) continue;
+
+      // 预验证：确保这笔交易能通过完整校验
+      const preCheck = await verifyPayment(log.transactionHash, env);
+      if (!preCheck.success) {
+        logger.warn('pollPayment: skipping tx that failed pre-verify', {
+          txHash: log.transactionHash,
+          error: preCheck.error,
+        });
+        continue;
+      }
 
       return { found: true, txHash: log.transactionHash };
     }

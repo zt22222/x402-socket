@@ -97,7 +97,7 @@
     const txHash = manualTx.value.trim();
     if (!txHash) return;
     hideError();
-    await verifyAndActivate(txHash);
+    await verifyAndActivate(txHash, true);
   });
 
   function showQrCode() {
@@ -144,6 +144,11 @@
       return; // Can't start polling without block number
     }
 
+    startPollingFrom(sinceBlock);
+  }
+
+  function startPollingFrom(sinceBlock) {
+    stopPolling();
     pollTimer = setInterval(async () => {
       try {
         const res = await fetch(`${API_BASE}/poll-payment?sinceBlock=${sinceBlock}`);
@@ -151,12 +156,16 @@
 
         if (data.found && data.txHash) {
           stopPolling();
-          await verifyAndActivate(data.txHash);
+          var result = await verifyAndActivate(data.txHash);
+          if (!result) {
+            // Verification failed (e.g. stale tx), resume polling
+            startPollingFrom(sinceBlock);
+          }
         }
       } catch (err) {
         // Silently retry on next interval
       }
-    }, 10000); // 每 10 秒轮询一次
+    }, 10000);
   }
 
   function stopPolling() {
@@ -166,7 +175,7 @@
     }
   }
 
-  async function verifyAndActivate(txHash) {
+  async function verifyAndActivate(txHash, isManual) {
     showStatusFlow('verify');
     payBtn.disabled = true;
     payBtn.classList.add('loading');
@@ -186,17 +195,23 @@
         showStatusFlow('active');
         hideFallback();
         hideQrCode();
-        // Update device status display
         statusDot.className = 'status-dot online';
         statusText.textContent = 'Activated';
         startCountdown(data.device.duration);
+        return true;
       } else {
-        showError(data.error || 'Verification failed');
+        if (isManual) {
+          showError(data.error || 'Verification failed');
+        }
         resetButton();
+        return false;
       }
     } catch (err) {
-      showError('Verification request failed, please retry');
+      if (isManual) {
+        showError('Verification request failed, please retry');
+      }
       resetButton();
+      return false;
     }
   }
 

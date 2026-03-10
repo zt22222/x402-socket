@@ -21,7 +21,7 @@ preview_id = "REPLACE_WITH_PREVIEW_KV_ID"
 
 [[kv_namespaces]]
 binding = "SHUTDOWN_TOKENS"
-id = "b42f9c3cc45844e3a331b3f74fe6bd17"
+id = "8b7b67de92494e74a420749f1fcb5f31"
 preview_id = "f501915250fa4475bceabf09118d3920"
 
 [vars]

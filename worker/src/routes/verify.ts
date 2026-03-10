@@ -24,6 +24,9 @@ export function verifyRoute(app: Hono<{ Bindings: Env }>) {
       return c.json({ error: verifyResult.error, txHash }, 400);
     }
 
+    // 标记 txHash 为已使用 (30天 TTL)
+    await c.env.USED_TX_HASHES.put(txHash.toLowerCase(), Date.now().toString(), { expirationTtl: 2592000 });
+
     // 2. 开启插座
     const controlResult = await controlDevice(devicePn, 'ON', c.env);
     if (!controlResult.success) {
