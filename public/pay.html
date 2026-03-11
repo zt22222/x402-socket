@@ -237,20 +237,63 @@
     outputs: [{ name: '', type: 'bool' }],
   }];
 
+  const API_BASE = window.location.origin;
+
   let paymentSent = false;
+  let paymentDone = false;
+  let userInitiated = false;
+  let pollTimer = null;
 
   // Connect button click
   connectBtn.addEventListener('click', async () => {
     paymentSent = false;
+    paymentDone = false;
+    userInitiated = true;
     await appKit.open();
   });
 
   // Watch for connection state changes
   appKit.subscribeState(async (state) => {
-    if (!state.open && appKit.getIsConnectedState() && !paymentSent) {
+    if (!state.open && appKit.getIsConnectedState() && !paymentSent && userInitiated) {
       await sendTransfer();
     }
   });
+
+  // Start polling blockchain for payment as fallback
+  async function startPolling() {
+    stopPolling();
+    try {
+      const blockRes = await fetch(`${API_BASE}/latest-block`);
+      const blockData = await blockRes.json();
+      const sinceBlock = blockData.blockNumber;
+
+      pollTimer = setInterval(async () => {
+        if (paymentDone) { stopPolling(); return; }
+        try {
+          const res = await fetch(`${API_BASE}/poll-payment?sinceBlock=${sinceBlock}`);
+          const data = await res.json();
+          if (data.found && data.txHash) {
+            onPaymentSuccess(data.txHash);
+          }
+        } catch (e) { /* retry next interval */ }
+      }, 8000);
+    } catch (e) { /* can't poll without block number */ }
+  }
+
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  function onPaymentSuccess(txHash) {
+    if (paymentDone) return;
+    paymentDone = true;
+    stopPolling();
+    connectBtn.disabled = true;
+    connectBtn.textContent = 'Payment Complete';
+    payStatus.style.display = 'block';
+    payStatus.className = 'pay-status success';
+    payStatus.textContent = 'Payment successful! TxHash: ' + txHash;
+  }
 
   async function sendTransfer() {
     paymentSent = true;
@@ -259,6 +302,9 @@
     payStatus.style.display = 'block';
     payStatus.className = 'pay-status';
     payStatus.textContent = 'Sending transaction...';
+
+    // Start polling as fallback — race with writeContract
+    startPolling();
 
     try {
       const txHash = await WagmiCore.writeContract(wagmiAdapter.wagmiConfig, {
@@ -269,6 +315,8 @@
         chainId: chainId,
       });
 
+      if (paymentDone) return; // polling already detected it
+
       payStatus.textContent = 'Waiting for confirmation...';
 
       const receipt = await WagmiCore.waitForTransactionReceipt(wagmiAdapter.wagmiConfig, {
@@ -277,18 +325,19 @@
       });
 
       if (receipt.status === 'success') {
-        payStatus.className = 'pay-status success';
-        payStatus.textContent = 'Payment successful! TxHash: ' + txHash;
-        connectBtn.textContent = 'Payment Complete';
+        onPaymentSuccess(txHash);
       } else {
         throw new Error('Transaction failed on-chain');
       }
     } catch (err) {
+      if (paymentDone) return; // polling already detected it, ignore error
       payStatus.className = 'pay-status error';
       if (err.message && err.message.includes('User rejected')) {
         payStatus.textContent = 'Transaction cancelled';
+        stopPolling();
       } else {
         payStatus.textContent = 'Error: ' + (err.shortMessage || err.message || 'Unknown error');
+        // Keep polling — tx might have been sent but WalletConnect lost connection
       }
       connectBtn.disabled = false;
       connectBtn.textContent = 'Connect Wallet & Pay';
