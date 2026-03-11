@@ -231,7 +231,7 @@
   (function () {
     'use strict';
 
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(window.location.hash.slice(1));
     const receiver = params.get('receiver') || '';
     const amount = params.get('amount') || '0.01';
     const token = params.get('token') || 'USDC';
