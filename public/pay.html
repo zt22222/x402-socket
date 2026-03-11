@@ -261,7 +261,10 @@
       {
         name: 'MetaMask',
         icon: '🦊',
-        deepLink: () => `https://metamask.app.link/send/${encodeURIComponent(eip681)}`,
+        deepLink: () => {
+          const dappUrl = window.location.href.replace(/^https?:\/\//, '');
+          return `https://metamask.app.link/dapp/${dappUrl}`;
+        },
       },
       {
         name: 'Trust Wallet',
