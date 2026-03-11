@@ -106,7 +106,7 @@
     qrAmountText.textContent = paymentParams.amount + ' ' + paymentParams.token;
 
     // Build pay page URL for QR code
-    const payUrl = `${API_BASE}/pay.html#receiver=${paymentParams.receiver}&amount=${paymentParams.amount}&token=${paymentParams.token}&contract=${paymentParams.tokenContract}&chainId=${paymentParams.chainId}&chainName=${paymentParams.chainName}&decimals=${paymentParams.decimals}&amountWei=${paymentParams.amountWei}`;
+    const payUrl = `${API_BASE}/pay.html#receiver=${paymentParams.receiver}&amount=${paymentParams.amount}&token=${paymentParams.token}&contract=${paymentParams.tokenContract}&chainId=${paymentParams.chainId}&chainName=${paymentParams.chainName}&decimals=${paymentParams.decimals}&amountWei=${paymentParams.amountWei}&projectId=${paymentParams.walletConnectProjectId}`;
 
     new QRCode(qrContainer, {
       text: payUrl,

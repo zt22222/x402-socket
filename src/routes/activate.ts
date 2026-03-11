@@ -25,6 +25,7 @@ router.get('/activate', async (req: Request, res: Response) => {
       amountWei: amountWei,
       decimals: 6,
       eip681Uri: eip681Uri,
+      walletConnectProjectId: config.walletConnectProjectId,
       expiry: Math.floor(Date.now() / 1000) + 600, // 10 minutes
     },
     device: {

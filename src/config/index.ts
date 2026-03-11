@@ -10,6 +10,7 @@ export const config = {
   usdcContract: process.env.USDC_CONTRACT || '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
   receiverAddress: process.env.RECEIVER_ADDRESS || '',
   paymentAmount: process.env.PAYMENT_AMOUNT || '0.01',
+  walletConnectProjectId: process.env.WALLETCONNECT_PROJECT_ID || '',
 
   // ShineMonitor Socket Platform
   socketApiBaseUrl: process.env.SOCKET_API_BASE_URL || 'https://api.litexmonitor.com',
