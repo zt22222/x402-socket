@@ -58,53 +58,7 @@
       word-break: break-all;
       font-family: monospace;
     }
-    .section-title {
-      font-size: 14px;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 12px;
-      width: 100%;
-      text-align: left;
-    }
-    .wallet-list {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 24px;
-    }
-    .wallet-btn {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 12px;
-      background: rgba(255,255,255,0.06);
-      color: #fff;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-decoration: none;
-    }
-    .wallet-btn:hover, .wallet-btn:active {
-      background: rgba(255,255,255,0.12);
-      border-color: rgba(255,255,255,0.25);
-    }
-    .wallet-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      flex-shrink: 0;
-    }
-    .wallet-name { flex: 1; text-align: left; }
-    .wallet-arrow { color: rgba(255,255,255,0.3); font-size: 18px; }
-    .pay-now-btn {
+    .connect-btn {
       width: 100%;
       padding: 16px;
       margin-bottom: 16px;
@@ -117,16 +71,17 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .pay-now-btn:hover:not(:disabled) {
+    .connect-btn:hover:not(:disabled) {
       transform: translateY(-1px);
       box-shadow: 0 4px 20px rgba(124,58,237,0.4);
     }
-    .pay-now-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .connect-btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .pay-status {
       font-size: 14px;
       color: rgba(255,255,255,0.7);
       text-align: center;
       margin-bottom: 16px;
+      word-break: break-all;
     }
     .pay-status.success { color: #4ade80; }
     .pay-status.error { color: #f87171; }
@@ -205,13 +160,11 @@
       <div class="payment-to">To: <span id="pay-receiver"></span></div>
     </div>
 
-    <div class="section-title" id="section-title">Choose a wallet</div>
+    <!-- Connect & Pay button -->
+    <button class="connect-btn" id="connect-btn">Connect Wallet & Pay</button>
 
     <!-- Pay status -->
     <div class="pay-status" id="pay-status" style="display:none;"></div>
-
-    <!-- Wallet list (always shown) -->
-    <div class="wallet-list" id="wallet-list"></div>
 
     <div class="divider"></div>
 
@@ -226,177 +179,139 @@
 
   <div class="toast" id="toast">Address copied!</div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js"></script>
-  <script>
-  (function () {
-    'use strict';
+  <script type="module">
+  import { createAppKit, WagmiAdapter, WagmiCore, networks } from
+    'https://cdn.jsdelivr.net/npm/@reown/appkit-cdn@1.8.19/dist/appkit.js';
 
-    const params = new URLSearchParams(window.location.search);
-    const receiver = params.get('receiver') || '';
-    const amount = params.get('amount') || '0.01';
-    const token = params.get('token') || 'USDC';
-    const contract = params.get('contract') || '';
-    const chainId = params.get('chainId') || '137';
-    const chainName = params.get('chainName') || 'Polygon';
-    const decimals = params.get('decimals') || '6';
-    const amountWei = params.get('amountWei') || '10000';
+  const { polygon } = networks;
 
-    const USDC_ABI = ['function transfer(address to, uint256 amount) returns (bool)'];
-    const eip681 = `ethereum:${contract}/transfer?address=${receiver}&uint256=${amountWei}&chainId=${chainId}`;
+  // Read payment params from query string
+  const params = new URLSearchParams(window.location.search);
+  const receiver = params.get('receiver') || '';
+  const amount = params.get('amount') || '0.01';
+  const token = params.get('token') || 'USDC';
+  const contract = params.get('contract') || '';
+  const chainId = parseInt(params.get('chainId') || '137', 10);
+  const chainName = params.get('chainName') || 'Polygon';
+  const decimals = parseInt(params.get('decimals') || '6', 10);
+  const amountWei = params.get('amountWei') || '10000';
+  const projectId = params.get('projectId') || '';
 
-    // Display payment info
-    document.getElementById('pay-amount').textContent = `${amount} ${token}`;
-    document.getElementById('pay-chain').textContent = `${chainName} Mainnet`;
-    document.getElementById('pay-receiver').textContent = receiver;
-    document.getElementById('copy-address').value = receiver;
+  // Display payment info
+  document.getElementById('pay-amount').textContent = `${amount} ${token}`;
+  document.getElementById('pay-chain').textContent = `${chainName} Mainnet`;
+  document.getElementById('pay-receiver').textContent = receiver;
+  document.getElementById('copy-address').value = receiver;
 
-    const sectionTitle = document.getElementById('section-title');
-    const payStatus = document.getElementById('pay-status');
-    const walletListEl = document.getElementById('wallet-list');
+  const connectBtn = document.getElementById('connect-btn');
+  const payStatus = document.getElementById('pay-status');
 
-    const hasWallet = typeof window.ethereum !== 'undefined';
+  // Initialize Reown AppKit
+  const wagmiAdapter = new WagmiAdapter({
+    projectId,
+    networks: [polygon],
+  });
 
-    // Wallet definitions
-    const wallets = [
-      {
-        name: 'MetaMask',
-        icon: '🦊',
-        deepLink: () => `https://metamask.app.link/send/${encodeURIComponent(eip681)}`,
-      },
-      {
-        name: 'Trust Wallet',
-        icon: '🛡️',
-        deepLink: () => `https://link.trustwallet.com/send?coin=966&address=${receiver}&amount=${amount}&token_id=${contract}`,
-      },
-      {
-        name: 'Coinbase Wallet',
-        icon: '🔵',
-        deepLink: () => `https://go.cb-w.com/send?address=${receiver}&amount=${amount}&asset=${token}&chainId=${chainId}`,
-      },
-      {
-        name: 'imToken',
-        icon: '💎',
-        deepLink: () => `imtokenv2://navigate?screen=DappView&url=${encodeURIComponent(window.location.href)}`,
-      },
-      {
-        name: 'TokenPocket',
-        icon: '🟣',
-        deepLink: () => `tpdapp://open?params=${encodeURIComponent(JSON.stringify({ url: window.location.href, chain: 'Polygon', chainId: chainId }))}`,
-      },
-      {
-        name: 'Other Wallet (EIP-681)',
-        icon: '📱',
-        deepLink: () => eip681,
-      },
-    ];
+  const appKit = createAppKit({
+    projectId,
+    adapters: [wagmiAdapter],
+    networks: [polygon],
+    defaultNetwork: polygon,
+    metadata: {
+      name: 'x402 Smart Socket',
+      description: 'Pay-per-Use Smart Socket Payment',
+      url: window.location.origin,
+      icons: [],
+    },
+  });
 
-    // Render wallet list
-    wallets.forEach(w => {
-      const btn = document.createElement('button');
-      btn.className = 'wallet-btn';
-      btn.innerHTML = `
-        <div class="wallet-icon">${w.icon}</div>
-        <div class="wallet-name">${w.name}</div>
-        <div class="wallet-arrow">›</div>
-      `;
-      btn.addEventListener('click', () => onWalletClick(w));
-      walletListEl.appendChild(btn);
-    });
+  // ERC-20 transfer ABI
+  const transferAbi = [{
+    name: 'transfer',
+    type: 'function',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  }];
 
-    async function onWalletClick(wallet) {
-      // If browser has injected wallet, try direct ERC-20 transfer
-      if (hasWallet) {
-        await payDirect(wallet.name);
-      } else {
-        // No injected wallet — use deep link
-        window.location.href = wallet.deepLink();
-      }
+  let paymentSent = false;
+
+  // Connect button click
+  connectBtn.addEventListener('click', async () => {
+    paymentSent = false;
+    await appKit.open();
+  });
+
+  // Watch for connection state changes
+  appKit.subscribeState(async (state) => {
+    if (!state.open && appKit.getIsConnectedState() && !paymentSent) {
+      await sendTransfer();
     }
+  });
 
-    async function payDirect(walletName) {
-      walletListEl.style.display = 'none';
-      payStatus.style.display = 'block';
-      payStatus.className = 'pay-status';
-      payStatus.textContent = `Connecting to ${walletName}...`;
+  async function sendTransfer() {
+    paymentSent = true;
+    connectBtn.disabled = true;
+    connectBtn.textContent = 'Processing...';
+    payStatus.style.display = 'block';
+    payStatus.className = 'pay-status';
+    payStatus.textContent = 'Sending transaction...';
 
-      try {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-        // Switch chain if needed
-        const chainIdHex = '0x' + parseInt(chainId).toString(16);
-        const currentChain = await window.ethereum.request({ method: 'eth_chainId' });
-        if (currentChain !== chainIdHex) {
-          try {
-            await window.ethereum.request({
-              method: 'wallet_switchEthereumChain',
-              params: [{ chainId: chainIdHex }],
-            });
-          } catch (switchErr) {
-            if (switchErr.code === 4902) {
-              await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [{
-                  chainId: chainIdHex,
-                  chainName: chainName,
-                  rpcUrls: ['https://polygon-rpc.com'],
-                  nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
-                  blockExplorerUrls: ['https://polygonscan.com'],
-                }],
-              });
-            } else {
-              throw switchErr;
-            }
-          }
-        }
-
-        payStatus.textContent = 'Confirm transaction in your wallet...';
-
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const usdcContract = new ethers.Contract(contract, USDC_ABI, signer);
-        const tx = await usdcContract.transfer(receiver, ethers.parseUnits(amount, parseInt(decimals)));
-
-        payStatus.textContent = 'Waiting for confirmation...';
-        const receipt = await tx.wait(1);
-
-        if (receipt.status === 1) {
-          payStatus.className = 'pay-status success';
-          payStatus.textContent = 'Payment successful! TxHash: ' + tx.hash;
-        } else {
-          throw new Error('Transaction failed on-chain');
-        }
-      } catch (err) {
-        payStatus.className = 'pay-status error';
-        if (err.code === 4001) {
-          payStatus.textContent = 'Transaction cancelled';
-        } else {
-          payStatus.textContent = 'Error: ' + (err.reason || err.message || 'Unknown error');
-        }
-        // Show wallet list again for retry
-        setTimeout(() => {
-          walletListEl.style.display = 'flex';
-          payStatus.style.display = 'none';
-        }, 3000);
-      }
-    }
-
-    // Copy button
-    const copyBtn = document.getElementById('copy-btn');
-    const toast = document.getElementById('toast');
-
-    copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(receiver).then(() => {
-        copyBtn.textContent = 'Copied!';
-        copyBtn.classList.add('copied');
-        toast.style.display = 'block';
-        setTimeout(() => {
-          toast.style.display = 'none';
-          copyBtn.textContent = 'Copy';
-          copyBtn.classList.remove('copied');
-        }, 2000);
+    try {
+      const txHash = await WagmiCore.writeContract(wagmiAdapter.wagmiConfig, {
+        address: contract,
+        abi: transferAbi,
+        functionName: 'transfer',
+        args: [receiver, BigInt(amountWei)],
+        chainId: chainId,
       });
+
+      payStatus.textContent = 'Waiting for confirmation...';
+
+      const receipt = await WagmiCore.waitForTransactionReceipt(wagmiAdapter.wagmiConfig, {
+        hash: txHash,
+        confirmations: 1,
+      });
+
+      if (receipt.status === 'success') {
+        payStatus.className = 'pay-status success';
+        payStatus.textContent = 'Payment successful! TxHash: ' + txHash;
+        connectBtn.textContent = 'Payment Complete';
+      } else {
+        throw new Error('Transaction failed on-chain');
+      }
+    } catch (err) {
+      payStatus.className = 'pay-status error';
+      if (err.message && err.message.includes('User rejected')) {
+        payStatus.textContent = 'Transaction cancelled';
+      } else {
+        payStatus.textContent = 'Error: ' + (err.shortMessage || err.message || 'Unknown error');
+      }
+      connectBtn.disabled = false;
+      connectBtn.textContent = 'Connect Wallet & Pay';
+      paymentSent = false;
+    }
+  }
+
+  // Copy button
+  const copyBtn = document.getElementById('copy-btn');
+  const toast = document.getElementById('toast');
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(receiver).then(() => {
+      copyBtn.textContent = 'Copied!';
+      copyBtn.classList.add('copied');
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+        copyBtn.textContent = 'Copy';
+        copyBtn.classList.remove('copied');
+      }, 2000);
     });
-  })();
+  });
   </script>
 </body>
 </html>

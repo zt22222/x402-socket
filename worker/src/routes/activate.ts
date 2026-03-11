@@ -24,6 +24,7 @@ export function activateRoute(app: Hono<{ Bindings: Env }>) {
           amountWei,
           decimals: 6,
           eip681Uri,
+          walletConnectProjectId: c.env.WALLETCONNECT_PROJECT_ID,
           expiry: Math.floor(Date.now() / 1000) + 600,
         },
         device: {

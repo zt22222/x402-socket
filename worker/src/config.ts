@@ -20,4 +20,5 @@ export interface Env {
   PAYMENT_AMOUNT: string;
   SOCKET_API_BASE_URL: string;
   POWER_ON_DURATION: string;
+  WALLETCONNECT_PROJECT_ID: string;
 }
