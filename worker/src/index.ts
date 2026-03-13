@@ -6,6 +6,7 @@ import { verifyRoute } from './routes/verify';
 import { statusRoute } from './routes/status';
 import { pollPaymentRoute } from './routes/poll-payment';
 import { turnOffRoute } from './routes/turn-off';
+import { controlRoute } from './routes/control';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -17,5 +18,6 @@ verifyRoute(app);
 statusRoute(app);
 pollPaymentRoute(app);
 turnOffRoute(app);
+controlRoute(app);
 
 export default app;
