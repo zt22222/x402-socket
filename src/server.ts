@@ -9,6 +9,7 @@ import activateRouter from './routes/activate';
 import verifyRouter from './routes/verify';
 import statusRouter from './routes/status';
 import pollPaymentRouter from './routes/poll-payment';
+import controlRouter from './routes/control';
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(activateRouter);
 app.use(verifyRouter);
 app.use(statusRouter);
 app.use(pollPaymentRouter);
+app.use(controlRouter);
 
 // Error handler
 app.use(errorHandler);
